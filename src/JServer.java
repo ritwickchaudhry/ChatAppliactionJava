@@ -7,6 +7,10 @@ public class JServer {
 	private int portNumber = 5123;
 	private ServerSocket serverSocket = null;
 	private Socket socket = null;
+	private ObjectOutputStream outToServer;
+	private ObjectInputStream inFromServer;
+	private JMessage initialMessage;
+	
 	public JServer()
 	{
 		try
@@ -23,13 +27,20 @@ public class JServer {
 	{
 		try
 		{
-			PrintWriter serverOutput = new PrintWriter(socket.getOutputStream(), true);
-			BufferedReader serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			JMessage initialMessage;
-			initialMessage = new JMessage(serverInput.readLine());
+			ObjectOutputStream outFromServer = new ObjectOutputStream(socket.getOutputStream());;
+			ObjectInputStream inFromClient = new ObjectInputStream(socket.getInputStream());;
+			try{
+			JPacket init_recv = (JPacket)inFromClient.readObject();
+			}catch(IOException ex){ex.printStackTrace();}
+			initialMessage = new JMessage(init_recv.message_return().string_return());
 			if(initialMessage.string_return() == "Hey! Want to chat?");
 			{
-				
+				JChatComm chatbox = new JChatComm(socket);
+				while(true)
+				{
+					chatbox.sendMessage();
+					chatbox.receiveMessage();
+				}
 			}
 		}
 		catch(IOException e){}
